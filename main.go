@@ -48,17 +48,34 @@ func main() {
 			"endpoints": []string{
 				"GET /_tunnel/health - Health check",
 				"GET /_tunnel/info - Service information (this page)",
-				"WS /_tunnel/ws/connect?port=3000 - WebSocket connection for tunnel client",
+				"WS /?port=3000 - WebSocket connection for tunnel client (Moved to root)",
 				"ANY /* - All traffic proxied to tunnel",
 			},
 		})
 	})
 
-	// WebSocket endpoint for tunnel client (ONLY management route)
-	r.GET("/_tunnel/ws/connect", tunnelHandlers.HandleWebSocket)
+	// ==========================================
+	// 門神 (The Bouncer) - 處理大門口 ( / ) 嘅分流
+	// ==========================================
+	r.GET("/", func(c *gin.Context) {
+		// 檢查係咪 WebSocket Upgrade，同埋有冇帶 ?port= 參數
+		if c.IsWebsocket() && c.Query("port") != "" {
+			// 認得係自己友 (Tunnel CLI Client) -> 建立骨幹隧道
+			tunnelHandlers.HandleWebSocket(c)
+			return
+		}
 
-	// Catch-all for ALL traffic (proxy everything else)
+		// 其他普通 GET 請求 (冇 port 參數或者唔係 WebSocket) -> 交畀 Proxy 轉發
+		tunnelHandlers.HandleTunnelTraffic(c)
+	})
+
+	// ==========================================
+	// Proxy Catch-all 規則
+	// ==========================================
+	// 處理所有其他路徑 (例如 /devtools/browser/XXXX)
 	r.NoRoute(tunnelHandlers.HandleTunnelTraffic)
+	// 處理大門口 ( / ) 嘅其他 Method (例如 POST, PUT 等等)
+	r.NoMethod(tunnelHandlers.HandleTunnelTraffic)
 
 	// Start server
 	log.Printf("Starting Rail Tunnel server on port %s", port)
