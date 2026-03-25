@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-
+/*
 func main() {
 	// Set gin mode based on environment
 	if os.Getenv("GIN_MODE") == "release" {
@@ -66,3 +66,4 @@ func main() {
 		log.Fatal("Failed to start server:", err)
 	}
 }
+*/
