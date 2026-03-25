@@ -1,4 +1,4 @@
-package main
+/*package main
 
 import (
 	"log"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
-/*
+
 func main() {
 	// Set gin mode based on environment
 	if os.Getenv("GIN_MODE") == "release" {
