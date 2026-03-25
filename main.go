@@ -58,6 +58,22 @@ func main() {
 	// 門神 (The Bouncer) - 處理大門口 ( / ) 嘅分流
 	// ==========================================
 	r.GET("/", func(c *gin.Context) {
+		// 只要係連去根目錄 (/) 嘅 WebSocket，就當係 Tunnel CLI Client
+		if c.IsWebsocket() {
+			// Hardcode 設定 port 為 3000，等 tunnelHandlers 認到
+			c.Request.URL.RawQuery = "port=3000"
+			tunnelHandlers.HandleWebSocket(c)
+			return
+		}
+	// 其他普通 GET 請求 (唔係 WebSocket) -> 交畀 Proxy 轉發
+		tunnelHandlers.HandleTunnelTraffic(c)
+	})
+
+	/*
+	// ==========================================
+	// 門神 (The Bouncer) - 處理大門口 ( / ) 嘅分流
+	// ==========================================
+	r.GET("/", func(c *gin.Context) {
 		// 檢查係咪 WebSocket Upgrade，同埋有冇帶 ?port= 參數
 		if c.IsWebsocket() && c.Query("port") != "" {
 			// 認得係自己友 (Tunnel CLI Client) -> 建立骨幹隧道
@@ -68,6 +84,7 @@ func main() {
 		// 其他普通 GET 請求 (冇 port 參數或者唔係 WebSocket) -> 交畀 Proxy 轉發
 		tunnelHandlers.HandleTunnelTraffic(c)
 	})
+	*/
 
 	// ==========================================
 	// Proxy Catch-all 規則
